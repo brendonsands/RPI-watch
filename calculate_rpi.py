@@ -41,7 +41,7 @@ for year in df['Year'].unique():
 
     for team in set(df_year['Team 1']).intersection(set(df_year['Team 2'])):
         
-        # Calculate Winning Percentage'    
+        # Winning Percentage
         WP_numerator = 0
         WP_denominator = 0
 
@@ -56,3 +56,32 @@ for year in df['Year'].unique():
 
         # save to cache
         WP_cache[team] = WP_numerator/WP_denominator
+
+        #Opponent Winning Percentage
+        opponents = set(team_df['Team 1']).intersection(set(team_df['Team 2']))
+        opponents.remove(team)
+
+        for opponent in opponents:
+
+            OWP_numerator = 0
+            OWP_denominator = 0
+
+            # all games for opponent
+            opponent_df = df_year[(df_year['Team 1'] == opponent) | (df_year['Team 2'] == opponent)]
+
+            # ignore games against team
+            opponent_df = opponent_df[(opponent_df['Team 1'] != team) & (opponent_df['Team 2'] != team)]
+
+            # apply winning percentage formula to opp's schedule
+            yearly_results_opp = opponent_df.apply(helpers.calculate_wp, axis = 1, team = opponent)
+
+            # sum up modified WP for opponent
+            WP_numerator_opp, WP_denominator_opp = tuple(sum(x) for x in zip(*yearly_results_opp))
+
+            OWP_numerator += WP_numerator_opp / WP_denominator_opp
+            OWP_denominator += 1
+        
+
+        OWP_cache[team] = OWP_numerator/OWP_denominator
+
+print(OWP_cache)
